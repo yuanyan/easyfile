@@ -6,19 +6,29 @@ var mkdirp = require('mkdirp');
 var file = module.exports;
 
 file.exists = fs.existsSync;
+file.chmod = fs.chmodSync;
+file.chown = fs.chownSync;
+file.append = fs.appendFileSync;
+file.stat = fs.statSync;
+file.read = fs.readFileSync;
+file.readlink = fs.readlinkSync;
+file.readdir = fs.readdirSync;
+file.rename = fs.renameSync;
+file.rmdir = fs.rmdirSync;
+file.unlink = fs.unlinkSync;
 
 file.normalize = function (filepath) {
-    filepath = path.normalize(filepath);
-    filepath = filepath.replace(/\\/g, '/');
-    return path.join(path.dirname(filepath), file.basename(filepath))
+  filepath = path.normalize(filepath);
+  filepath = filepath.replace(/\\/g, '/');
+  return path.join(path.dirname(filepath), file.basename(filepath));
 };
 
 file.extname = function (filepath) {
-    return path.extname(url.parse(filepath).pathname);
+  return path.extname(url.parse(filepath).pathname);
 };
 
 file.basename = function (filepath, ext) {
-    return path.basename(url.parse(filepath).pathname, ext);
+  return path.basename(url.parse(filepath).pathname, ext);
 };
 
 /**
@@ -28,11 +38,11 @@ file.basename = function (filepath, ext) {
  * @returns {*}
  */
 file.isFile = function (filepath) {
-    try {
-        return fs.statSync(filepath).isFile();
-    } catch (e) {
-        return false;
-    }
+  try {
+    return fs.statSync(filepath).isFile();
+  } catch (e) {
+    return false;
+  }
 };
 
 /**
@@ -42,19 +52,11 @@ file.isFile = function (filepath) {
  * @returns {*}
  */
 file.isDir = function (filepath) {
-    try {
-        return filepath.slice(-1) === '/' || fs.statSync(filepath).isDirectory();
-    } catch (e) {
-        return false;
-    }
-};
-
-/**
- * Synchronous rename
- * @mothod file.rename(oldpath, newpath)
- */
-file.rename = function () {
-    return fs.renameSync.apply(this, arguments);
+  try {
+    return filepath.slice(-1) === '/' || fs.statSync(filepath).isDirectory();
+  } catch (e) {
+    return false;
+  }
 };
 
 /**
@@ -66,41 +68,41 @@ file.rename = function () {
  * @returns {boolean|array}
  */
 file.copy = function (src, dest, options) {
-    options = options || {};
-    if (file.isFile(src)) {
-        return copyFile(src, dest, options);
-    } else if (file.isDir(src)) {
-        return copydir(src, dest, options);
-    }
+  options = options || {};
+  if (file.isFile(src)) {
+    return copyFile(src, dest, options);
+  } else if (file.isDir(src)) {
+    return copydir(src, dest, options);
+  }
 };
 
 file.write = function (path, data, options){
-    return writeFile(path, data, options);
+  return writeFile(path, data, options || {});
 };
 
 function writeFile(filename, data, options){
 
-    if (options.force && file.exists(filename)) {
-        if (options.backup) {
-            var backupBasePath = filename + ".~";
-            var backupPath = backupBasePath;
-            for (var i = 1; ; i++) {
-                backupPath = backupBasePath + i;
-                if (!file.exists(backupPath)) {
-                    break;
-                }
-            }
-            copyFile(filename, backupPath, options);
+  if (options.force && file.exists(filename)) {
+    if (options.backup) {
+      var backupBasePath = filename + ".~";
+      var backupPath = backupBasePath;
+      for (var i = 1; ; i++) {
+        backupPath = backupBasePath + i;
+        if (!file.exists(backupPath)) {
+          break;
         }
+      }
+      copyFile(filename, backupPath, options);
     }
+  }
 
-    //Make sure destination dir exists.
-    var parentDir = path.dirname(filename);
-    if (!file.exists(parentDir)) {
-        file.mkdir(parentDir);
-    }
+  // Make sure destination dir exists.
+  var parentDir = path.dirname(filename);
+  if (!file.exists(parentDir)) {
+    file.mkdir(parentDir);
+  }
 
-    fs.writeFileSync(filename, data, options);
+  fs.writeFileSync(filename, data, options);
 }
 
 /**
@@ -111,42 +113,42 @@ function writeFile(filename, data, options){
  * @returns {Array}
  */
 function copydir(srcDir, destDir, options, copiedFiles) {
-    // Normalize the directory names, but keep front slashes.
-    srcDir = file.normalize(srcDir + "/");
-    destDir = file.normalize(destDir + "/");
-    copiedFiles = copiedFiles || [];
+  // Normalize the directory names, but keep front slashes.
+  srcDir = file.normalize(srcDir + "/");
+  destDir = file.normalize(destDir + "/");
+  copiedFiles = copiedFiles || [];
 
-    var files = fs.readdirSync(srcDir),
-        i,
-        srcFileName,
-        destFileName;
+  var files = fs.readdirSync(srcDir);
+  var srcFileName;
+  var destFileName;
+  var i;
 
-    for (i = 0; i < files.length; i++) {
+  for (i = 0; i < files.length; i++) {
 
-        srcFileName = path.join(srcDir, files[i]);
+    srcFileName = path.join(srcDir, files[i]);
 
-        if (file.isFile(srcFileName)) {
-            srcFileName = file.normalize(srcFileName);
-            // The filename at root dir not contains './', so append './' prefix for filename replace,
-            // otherwise that will be wrong when copy file from root dir to one other dir
-            if (srcDir == './') srcFileName = srcDir + srcFileName;
-            destFileName = srcFileName.replace(srcDir, destDir);
+    if (file.isFile(srcFileName)) {
+      srcFileName = file.normalize(srcFileName);
+      // The filename at root dir not contains './', so append './' prefix for filename replace,
+      // otherwise that will be wrong when copy file from root dir to one other dir
+      if (srcDir == './') srcFileName = srcDir + srcFileName;
+      destFileName = srcFileName.replace(srcDir, destDir);
 
-            if (copyFile(srcFileName, destFileName, options)) {
-                copiedFiles.push(destFileName);
-            }
+      if (copyFile(srcFileName, destFileName, options)) {
+        copiedFiles.push(destFileName);
+      }
 
-        } else if (options.recursive || options.recursive === undefined) {
-            // if dir and allow copy recursively
-            var subDirDest = destDir;
-            if (!options.flatten) {
-                subDirDest = file.normalize(path.join(destDir, path.basename(srcFileName)));
-            }
-            copydir(srcFileName, subDirDest, options, copiedFiles);
-        }
+    } else if (options.recursive || options.recursive === undefined) {
+      // if dir and allow copy recursively
+      var subDirDest = destDir;
+      if (!options.flatten) {
+        subDirDest = file.normalize(path.join(destDir, path.basename(srcFileName)));
+      }
+      copydir(srcFileName, subDirDest, options, copiedFiles);
     }
+  }
 
-    return copiedFiles;
+  return copiedFiles;
 }
 
 /**
@@ -158,17 +160,18 @@ function copydir(srcDir, destDir, options, copiedFiles) {
  */
 function copyFile(srcFile, destFile, options) {
 
-    srcFile = file.normalize(srcFile);
-    destFile = file.normalize(destFile);
+  srcFile = file.normalize(srcFile);
+  destFile = file.normalize(destFile);
 
-    // If force is new, then compare dates and only copy if the src is newer than dest.
-    if (options.update
-        && file.exists(destFile)
-        && fs.statSync(destFile).mtime.getTime() >= fs.statSync(srcFile).mtime.getTime()) {
-        return false;
-    }
+  // If force is new, then compare dates and only copy if the src is newer than dest.
+  if (options.update
+    && file.exists(destFile)
+    && fs.statSync(destFile).mtime.getTime() >= fs.statSync(srcFile).mtime.getTime()
+  ) {
+    return false;
+  }
 
-    return writeFile(destFile, fs.readFileSync(srcFile, options), options)
+  return writeFile(destFile, fs.readFileSync(srcFile, options), options);
 }
 
 /**
@@ -180,6 +183,6 @@ function copyFile(srcFile, destFile, options) {
  *  file.mkdir("/tmp/dir", 755)
  */
 file.mkdir = function (dirpath, mode) {
-    mkdirp.sync(dirpath, mode);
-    return dirpath;
+  mkdirp.sync(dirpath, mode);
+  return dirpath;
 };

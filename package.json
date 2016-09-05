@@ -1,11 +1,8 @@
 {
   "name": "easyfile",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Easy file manipulation.",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "repository": {
     "type": "git",
     "url": "git://github.com/yuanyan/easyfile.git"
@@ -21,6 +18,6 @@
   },
   "homepage": "https://github.com/yuanyan/easyfile",
   "dependencies": {
-    "mkdirp": "^0.5.0"
+    "mkdirp": "^0.5.1"
   }
 }
