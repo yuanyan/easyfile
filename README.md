@@ -1,5 +1,5 @@
 # easyfile
-> Super tiny and useful file uitls.
+> Super tiny and useful file utils.
 
 ## Install
 

@@ -1,7 +1,7 @@
 {
   "name": "easyfile",
   "version": "0.2.0",
-  "description": "Easy file manipulation.",
+  "description": "Super tiny and useful file utils.",
   "main": "index.js",
   "repository": {
     "type": "git",
