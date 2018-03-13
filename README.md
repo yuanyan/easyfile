@@ -1,6 +1,8 @@
 # easyfile
+> Super tiny and useful file uitls.
 
 ## Install
+
 ```sh
 npm install easyfile --save
 ```
@@ -35,6 +37,16 @@ easyfile.mkdir('/newpath/newpath/newpath');
 easyfile.copy('fromfile', 'tofile');
 easyfile.copy('fromdir', 'todir');
 ```
+
+When copy dir, some file or sub directory not you want could be filter:
+
+```js
+easyfile.copy('fromdir', 'todir', {
+  // only copy js file
+  filter: filepath => path.extname(filepath) === '.js'
+})
+```
+
 
 4. `write` could force write and backup
 

@@ -119,32 +119,42 @@ function copydir(srcDir, destDir, options, copiedFiles) {
   copiedFiles = copiedFiles || [];
 
   var files = fs.readdirSync(srcDir);
-  var srcFileName;
-  var destFileName;
+  var srcFilepath;
+  var srcFilename;
+  var destFilepath;
   var i;
+  // Some file or sub directory not you want could filter
+  var filter = options.filter;
+  var hasFilter = typeof filter === 'function';
 
   for (i = 0; i < files.length; i++) {
+    srcFilename = files[i];
+    srcFilepath = path.join(srcDir, srcFilename);
 
-    srcFileName = path.join(srcDir, files[i]);
+    if (hasFilter && !filter(srcFilepath)) {
+      continue;
+    }
 
-    if (file.isFile(srcFileName)) {
-      srcFileName = file.normalize(srcFileName);
+    if (file.isFile(srcFilepath)) {
+      srcFilepath = file.normalize(srcFilepath);
       // The filename at root dir not contains './', so append './' prefix for filename replace,
       // otherwise that will be wrong when copy file from root dir to one other dir
-      if (srcDir == './') srcFileName = srcDir + srcFileName;
-      destFileName = srcFileName.replace(srcDir, destDir);
+      if (srcDir == './') srcFilepath = srcDir + srcFilepath;
 
-      if (copyFile(srcFileName, destFileName, options)) {
-        copiedFiles.push(destFileName);
+      destFilepath = srcFilepath.replace(srcDir, destDir);
+
+      if (copyFile(srcFilepath, destFilepath, options)) {
+        copiedFiles.push(destFilepath);
       }
 
     } else if (options.recursive || options.recursive === undefined) {
       // if dir and allow copy recursively
       var subDirDest = destDir;
       if (!options.flatten) {
-        subDirDest = file.normalize(path.join(destDir, path.basename(srcFileName)));
+        subDirDest = file.normalize(path.join(destDir, srcFilename));
       }
-      copydir(srcFileName, subDirDest, options, copiedFiles);
+
+      copydir(srcFilepath, subDirDest, options, copiedFiles);
     }
   }
 
